@@ -143,3 +143,30 @@ def plot_multi_accuracy_curves(histories, title, save_path):
 
     plt.show()
     save_figure(fig, save_path)
+
+
+def plot_signals(X, y, num_samples_per_class=5, signal_len=100, save_path='signals.png'):
+    """
+    Plot several sine and cosine signals from the dataset.
+    """
+    idx_sine = np.where(y == 0)[0][:num_samples_per_class]
+    idx_cos = np.where(y == 1)[0][:num_samples_per_class]
+    
+    plt.figure(figsize=(12, 6))
+    # Plot sine samples
+    for i, idx in enumerate(idx_sine):
+        plt.subplot(2, num_samples_per_class, i+1)
+        plt.plot(X[idx], 'b')
+        plt.title(f'Sine {i+1}')
+        plt.ylim([-3, 3])
+        plt.grid(True)
+    # Plot cosine samples
+    for i, idx in enumerate(idx_cos):
+        plt.subplot(2, num_samples_per_class, num_samples_per_class + i + 1)
+        plt.plot(X[idx], 'r')
+        plt.title(f'Cosine {i+1}')
+        plt.ylim([-3, 3])
+        plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.show()

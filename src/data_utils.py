@@ -104,13 +104,9 @@ class NoisyMNIST(Dataset):
         return img_noisy, label
 
 
-def get_mnist_data_with_noise(batch_size=64, noise_std=0.5, data_root=None):
-    if data_root is None:
-        try:
-            current_dir = Path(__file__).parent
-            data_root = current_dir.parent / 'data'
-        except NameError:
-            data_root = Path.cwd() / 'data'
+def get_mnist_data_with_noise(batch_size=64, noise_std=0.5):
+    current_dir = Path(__file__).parent  # .../src
+    data_root = current_dir.parent / 'data'  # .../data
     
     transform = transforms.Compose([
         transforms.ToTensor(),
@@ -124,3 +120,67 @@ def get_mnist_data_with_noise(batch_size=64, noise_std=0.5, data_root=None):
     testloader = DataLoader(testset_clean, batch_size=batch_size, shuffle=False)
     trainloader_noisy = DataLoader(trainset_noisy, batch_size=batch_size, shuffle=True)
     return trainloader_noisy, testloader
+
+
+def generate_sine_cosine_data(num_samples=5000, signal_length=100, noise_std=0.1):
+    """
+    Generate binary classification dataset.
+    Class 0: sine wave, Class 1: cosine wave.
+    Each sample is a 1D signal of length `signal_length`.
+    """
+    X = []
+    y = []
+    t = np.linspace(0, 4 * np.pi, signal_length)  # frequency: 2 cycles over length 100
+    for i in range(num_samples):
+        if i < num_samples // 2:
+            # Sine wave (class 0)
+            signal = np.sin(t)
+            label = 0
+        else:
+            # Cosine wave (class 1)
+            signal = np.cos(t)
+            label = 1
+        # Add Gaussian noise
+        signal += np.random.normal(0, noise_std, signal_length)
+        X.append(signal)
+        y.append(label)
+    X = np.array(X, dtype=np.float32)
+    y = np.array(y, dtype=np.int64)
+    # Shuffle
+    indices = np.random.permutation(len(X))
+    X, y = X[indices], y[indices]
+    return X, y
+
+def generate_hard_sine_cosine_data(num_samples=5000, signal_length=100, 
+                                   freq_range=(1, 3), phase_range=(0, 2*np.pi),
+                                   noise_std=0.5):
+    """
+    Generate sine vs cosine classification with random frequency and phase per sample.
+    Class 0: sine wave, Class 1: cosine wave.
+    """
+    X = []
+    y = []
+    for i in range(num_samples):
+        # Random frequency (cycles per signal_length)
+        freq = np.random.uniform(*freq_range)
+        t = np.linspace(0, 2 * np.pi * freq, signal_length)
+        # Random phase shift (same for both sine and cosine to keep relation)
+        phase = np.random.uniform(*phase_range)
+        if i < num_samples // 2:
+            # Sine wave (class 0)
+            signal = np.sin(t + phase)
+            label = 0
+        else:
+            # Cosine wave (class 1)
+            signal = np.cos(t + phase)
+            label = 1
+        # Add Gaussian noise
+        signal += np.random.normal(0, noise_std, signal_length)
+        X.append(signal)
+        y.append(label)
+    X = np.array(X, dtype=np.float32)
+    y = np.array(y, dtype=np.int64)
+    # Shuffle
+    indices = np.random.permutation(len(X))
+    X, y = X[indices], y[indices]
+    return X, y
